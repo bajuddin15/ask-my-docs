@@ -43,20 +43,18 @@ def _build_context_block(chunks: list[dict]) -> str:
         lines.append(f"[{i}] {c['content']}")
     return "\n\n".join(lines)
 
-
 async def critic_node(state: AgentState) -> dict:
     retry_count = state.get("retry_count", 0)
-
-    # nothing to verify if we already gave the "couldn't find anything" fallback
+    max_retries = state.get("max_critic_retries", MAX_RETRIES)
+    
     if not state["retrieved_chunks"]:
-        return {
-            "is_grounded": True,
-            "critic_feedback": "",
-            "retry_count": retry_count,
-            "next_action": "end",
-            "final_answer": state["draft_answer"],
-            "sources": [],
-        }
+        return {"is_grounded": True, "critic_feedback": "", "retry_count": retry_count,
+                "next_action": "end", "final_answer": state["draft_answer"], "sources": []}
+
+    # workspaces can turn the Critic off entirely (Settings page)
+    if not state.get("critic_enabled", True):
+        return {"is_grounded": True, "critic_feedback": "", "retry_count": retry_count,
+                "next_action": "end", "final_answer": state["draft_answer"], "sources": state["retrieved_chunks"]}
 
     llm = get_llm()
     structured_llm = llm.with_structured_output(CriticVerdict)
@@ -68,25 +66,15 @@ async def critic_node(state: AgentState) -> dict:
     verdict: CriticVerdict = await chain.ainvoke({"context": context, "answer": state["draft_answer"]})
 
     new_retry_count = retry_count + (0 if verdict.is_grounded else 1)
-    exhausted = new_retry_count > MAX_RETRIES
+    exhausted = new_retry_count > max_retries   # <-- max_retries, not the hardcoded constant
 
     if verdict.is_grounded or exhausted:
-        return {
-            "is_grounded": verdict.is_grounded,
-            "critic_feedback": verdict.feedback,
-            "retry_count": new_retry_count,
-            "next_action": "end",
-            "final_answer": state["draft_answer"],
-            "sources": state["retrieved_chunks"],
-        }
+        return {"is_grounded": verdict.is_grounded, "critic_feedback": verdict.feedback,
+                "retry_count": new_retry_count, "next_action": "end",
+                "final_answer": state["draft_answer"], "sources": state["retrieved_chunks"]}
 
-    return {
-        "is_grounded": False,
-        "critic_feedback": verdict.feedback,
-        "retry_count": new_retry_count,
-        "next_action": "retry",
-    }
-
+    return {"is_grounded": False, "critic_feedback": verdict.feedback,
+            "retry_count": new_retry_count, "next_action": "retry"}
 
 def route_after_critic(state: AgentState) -> str:
     return state["next_action"]

@@ -36,21 +36,17 @@ def build_graph(db: AsyncSession):
 
     return graph.compile()
 
-
-async def run_agent(db: AsyncSession, workspace_id: str, question: str) -> AgentState:
+async def run_agent(
+    db: AsyncSession, workspace_id: str, question: str,
+    critic_enabled: bool = True, max_retries: int = 2,
+) -> AgentState:
     graph = build_graph(db)
     initial_state: AgentState = {
-        "workspace_id": workspace_id,
-        "question": question,
-        "intent": "general",
-        "retrieved_chunks": [],
-        "draft_answer": "",
-        "is_grounded": False,
-        "critic_feedback": "",
-        "retry_count": 0,
-        "next_action": "retry",
-        "final_answer": "",
-        "sources": [],
+        "workspace_id": workspace_id, "question": question,
+        "critic_enabled": critic_enabled, "max_retries": max_retries,
+        "intent": "general", "retrieved_chunks": [], "draft_answer": "",
+        "is_grounded": False, "critic_feedback": "", "retry_count": 0,
+        "next_action": "retry", "final_answer": "", "sources": [],
     }
     config = {
         "run_name": "ask_my_docs_agent",

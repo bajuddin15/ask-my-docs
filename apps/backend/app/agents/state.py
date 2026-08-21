@@ -22,6 +22,10 @@ class AgentState(TypedDict):
     # input
     workspace_id: str
     question: str
+    
+    # per-workspace agent settings (Settings page controls these)
+    critic_enabled: bool
+    max_critic_retries: int
 
     # router output
     intent: Literal["single_doc", "multi_doc", "summarization", "general"]

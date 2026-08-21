@@ -1,8 +1,8 @@
-"""initial schema: users, workspaces, members, documents, chunks, chats
+"""initial schema
 
-Revision ID: ab4c5db727ea
+Revision ID: f0af901e3640
 Revises: 
-Create Date: 2026-08-21 11:20:55.017526
+Create Date: 2026-08-21 18:26:57.385676
 
 """
 from typing import Sequence, Union
@@ -10,10 +10,11 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 import pgvector
+from pgvector.sqlalchemy import Vector
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'ab4c5db727ea'
+revision: str = 'f0af901e3640'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -40,6 +41,9 @@ def upgrade() -> None:
     sa.Column('owner_id', sa.UUID(), nullable=False),
     sa.Column('monthly_query_count', sa.Integer(), nullable=False),
     sa.Column('monthly_query_limit', sa.Integer(), nullable=False),
+    sa.Column('critic_enabled', sa.Boolean(), nullable=False),
+    sa.Column('max_critic_retries', sa.Integer(), nullable=False),
+    sa.Column('answer_model', sa.String(length=50), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -104,6 +108,10 @@ def upgrade() -> None:
     sa.Column('chat_id', sa.UUID(), nullable=False),
     sa.Column('role', sa.String(length=20), nullable=False),
     sa.Column('content', sa.String(), nullable=False),
+    sa.Column('sources', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
+    sa.Column('is_grounded', sa.Boolean(), nullable=False),
+    sa.Column('retry_count', sa.Integer(), nullable=False),
+    sa.Column('latency_ms', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['chat_id'], ['chats.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')

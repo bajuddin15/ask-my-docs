@@ -26,6 +26,11 @@ class Workspace(Base):
     monthly_query_count: Mapped[int] = mapped_column(Integer, default=0)
     monthly_query_limit: Mapped[int] = mapped_column(Integer, default=1000)
 
+    # agent behavior — first-class workspace settings, not hardcoded constants
+    critic_enabled: Mapped[bool] = mapped_column(default=True)
+    max_critic_retries: Mapped[int] = mapped_column(Integer, default=2)
+    answer_model: Mapped[str] = mapped_column(String(50), default="gpt-4o-mini")
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     members = relationship("WorkspaceMember", back_populates="workspace", cascade="all, delete-orphan")

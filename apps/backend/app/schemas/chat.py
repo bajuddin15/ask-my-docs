@@ -23,12 +23,22 @@ class MessageResponse(BaseModel):
     role: str
     content: str
     sources: list[SourceRef]
+    is_grounded: bool
+    retry_count: int
+    latency_ms: int | None = None
     created_at: datetime
 
     class Config:
         from_attributes = True
 
+class ChatSummary(BaseModel):
+    id: uuid.UUID
+    title: str
+    created_at: datetime
 
+    class Config:
+        from_attributes = True
+        
 class ChatResponse(BaseModel):
     chat_id: uuid.UUID
     message: MessageResponse

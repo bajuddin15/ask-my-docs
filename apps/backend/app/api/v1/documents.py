@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, BackgroundTasks, Depends, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -46,3 +47,12 @@ async def list_documents(
 ):
     workspace, _membership = workspace_membership
     return await document_service.list_documents(db, workspace.id)
+
+@router.delete("/{document_id}", status_code=204)
+async def delete_document(
+    document_id: uuid.UUID,
+    workspace_membership: tuple[Workspace, WorkspaceMember] = Depends(get_current_workspace),
+    db: AsyncSession = Depends(get_db),
+):
+    workspace, _membership = workspace_membership
+    await document_service.delete_document(db, workspace.id, document_id)

@@ -30,11 +30,19 @@ class Message(Base):
         UUID(as_uuid=True), ForeignKey("chats.id", ondelete="CASCADE"), nullable=False, index=True
     )
     
-    # app/models/chat.py — Message class mein
-    sources: Mapped[list] = mapped_column(JSONB, default=list)  # dict nahi, list
 
     role: Mapped[str] = mapped_column(String(20), nullable=False)  # "user" | "assistant"
     content: Mapped[str] = mapped_column(nullable=False)
+    
+    # app/models/chat.py — Message class mein
+    sources: Mapped[list] = mapped_column(JSONB, default=list)  # dict nahi, list
+    # agent trace metadata (assistant messages only) — powers the frontend's
+    # "Agent Trace" panel and the unverified-answer warning state
+    is_grounded: Mapped[bool] = mapped_column(default=True)
+    retry_count: Mapped[int] = mapped_column(default=0)
+
+    latency_ms: Mapped[int | None] = mapped_column(nullable=True)  # total agent-run wall time
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     chat = relationship("Chat", back_populates="messages")

@@ -56,3 +56,11 @@ async def list_documents(db: AsyncSession, workspace_id: uuid.UUID) -> list[Docu
         select(Document).where(Document.workspace_id == workspace_id).order_by(Document.uploaded_at.desc())
     )
     return list(result.scalars().all())
+
+async def delete_document(db: AsyncSession, workspace_id: uuid.UUID, document_id: uuid.UUID) -> None:
+    document = await db.get(Document, document_id)
+    if document is None or document.workspace_id != workspace_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Document not found in this workspace")
+    # chunks cascade-delete at the DB level (ondelete="CASCADE"), so this is enough
+    await db.delete(document)
+    await db.commit()

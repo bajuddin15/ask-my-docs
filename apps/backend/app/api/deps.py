@@ -40,6 +40,12 @@ async def get_current_workspace(
     member of x_workspace_id. Every document/chat query downstream filters
     by workspace.id from here — never by anything the client sends directly.
     """
+    
+    # DEBUG: Print all values
+    print(f"🔍 Current User ID: {current_user.id}")
+    print(f"🔍 X-Workspace-Id: {x_workspace_id}")
+    print(f"🔍 Both IDs type: {type(current_user.id)}, {type(x_workspace_id)}")
+    
     result = await db.execute(
         select(WorkspaceMember, Workspace)
         .join(Workspace, Workspace.id == WorkspaceMember.workspace_id)
@@ -50,6 +56,8 @@ async def get_current_workspace(
         )
     )
     row = result.first()
+    print({"row": row})
+    print({"result": result})
     if row is None:
         raise HTTPException(
             status.HTTP_403_FORBIDDEN,
