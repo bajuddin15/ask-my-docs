@@ -1,0 +1,75 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@font-face {
+  font-family: "Space Grotesk";
+  src: url("/fonts/SpaceGrotesk.ttf") format("truetype");
+  font-weight: 300 700;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Inter.ttf") format("truetype");
+  font-weight: 100 900;
+}
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("/fonts/JetBrainsMono.ttf") format("truetype");
+  font-weight: 100 800;
+}
+
+@theme {
+  /* surfaces */
+  --color-bg: #090b11;
+  --color-bg-soft: #0c0f17;
+  --color-surface: #10141d;
+  --color-surface-2: #151a25;
+  --color-surface-3: #1b2130;
+  --color-border: #232a3a;
+  --color-border-soft: #1a202d;
+  --color-border-bright: #323b52;
+
+  /* text */
+  --color-text-1: #f4f5f9;
+  --color-text-2: #9ba2b4;
+  --color-text-3: #5e6579;
+  --color-text-4: #454b5c;
+
+  /* brand accents */
+  --color-accent: #7c6cff;
+  --color-accent-2: #5b4cdb;
+  --color-signal: #2fe2c4;
+  --color-amber: #f5a93e;
+  --color-danger: #f1555f;
+  --color-success: #3ecf8e;
+
+  /* fonts */
+  --font-display: "Space Grotesk", ui-sans-serif, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border-soft);
+  }
+  body {
+    @apply bg-bg text-text-1 font-sans antialiased;
+    background-image:
+      radial-gradient(
+        1200px 600px at 15% -10%,
+        rgba(124, 108, 255, 0.08),
+        transparent 60%
+      ),
+      radial-gradient(
+        900px 500px at 105% 10%,
+        rgba(47, 226, 196, 0.05),
+        transparent 60%
+      );
+    background-attachment: fixed;
+  }
+}
