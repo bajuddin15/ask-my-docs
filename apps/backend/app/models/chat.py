@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 from sqlalchemy import DateTime, ForeignKey, String, func
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
@@ -28,6 +29,9 @@ class Message(Base):
     chat_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("chats.id", ondelete="CASCADE"), nullable=False, index=True
     )
+    
+    # app/models/chat.py — Message class mein
+    sources: Mapped[list] = mapped_column(JSONB, default=list)  # dict nahi, list
 
     role: Mapped[str] = mapped_column(String(20), nullable=False)  # "user" | "assistant"
     content: Mapped[str] = mapped_column(nullable=False)
