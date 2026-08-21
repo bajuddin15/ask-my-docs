@@ -36,3 +36,4 @@ build/
 .expo/
 
 uploads/
+eval_report_*.json

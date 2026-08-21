@@ -1,4 +1,5 @@
 from functools import lru_cache
+import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -23,6 +24,11 @@ class Settings(BaseSettings):
     LANGCHAIN_PROJECT: str = "ask-my-docs-dev"
     LANGCHAIN_TRACING_V2: bool = True
 
+    LANGSMITH_TRACING: bool = True
+    LANGSMITH_ENDPOINT: str = "https://api.smith.langchain.com"
+    LANGSMITH_API_KEY: str = ""
+    LANGSMITH_PROJECT: str = "ask-my-docs-dev"
+
     FREE_PLAN_MONTHLY_QUERY_LIMIT: int = 1000
     FREE_PLAN_MAX_DOCUMENTS: int = 5
 
@@ -33,3 +39,15 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+
+# LangChain/LangSmith's automatic tracing reads directly from os.environ —
+# it has no idea our `settings` object exists. pydantic-settings loads .env
+# into `settings.*` but does NOT copy those values into the real process
+# environment, so without this, tracing silently does nothing (no error,
+# just an empty LangSmith project).
+os.environ.setdefault("LANGSMITH_TRACING", "true" if settings.LANGSMITH_TRACING else "false")
+os.environ.setdefault("LANGSMITH_API_KEY", settings.LANGSMITH_API_KEY)
+os.environ.setdefault("LANGSMITH_PROJECT", settings.LANGSMITH_PROJECT)
+os.environ.setdefault("LANGCHAIN_TRACING_V2", "true" if settings.LANGCHAIN_TRACING_V2 else "false")
+os.environ.setdefault("LANGCHAIN_API_KEY", settings.LANGCHAIN_API_KEY)
+os.environ.setdefault("LANGCHAIN_PROJECT", settings.LANGCHAIN_PROJECT)
