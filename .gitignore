@@ -1,0 +1,36 @@
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.Python
+*.egg-info/
+
+# Environment variables (secrets — kabhi commit mat karo)
+.env
+.env.local
+
+# uv (tumne uv use kiya hai package manager ke liye)
+.uv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes (agar local bind mount use kiya ho)
+infra/postgres/data/
+
+# Alembic — versions/ folder RAKHNA hai (migrations commit hoti hain),
+# lekin agar koi __pycache__ ban jaye uske andar wo ignore ho
+alembic/versions/__pycache__/
+
+# Node (jab web/mobile app add karoge)
+node_modules/
+dist/
+build/
+.expo/
