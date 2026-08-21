@@ -6,7 +6,12 @@ alembic
 pgvector
 python-jose[cryptography]
 passlib[bcrypt]
+bcrypt<4.1
 pydantic-settings
 python-multipart
 email-validator
 psycopg2-binary
+pypdf
+langchain-text-splitters
+langchain-openai
+langchain-core
