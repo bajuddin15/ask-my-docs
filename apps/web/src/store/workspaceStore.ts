@@ -7,6 +7,8 @@ export interface Workspace {
   slug: string;
   plan: string;
   role: string;
+  monthly_query_count: number;
+  monthly_query_limit: number;
 }
 
 interface WorkspaceState {

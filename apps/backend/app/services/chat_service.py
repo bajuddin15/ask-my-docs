@@ -32,6 +32,7 @@ async def ask(
     chat_id: uuid.UUID | None,
 ) -> tuple[Chat, Message]:
     chat = await _get_or_create_chat(db, workspace.id, user_id, chat_id, message)
+    print({"chat_id": chat.id})
 
     # save the user's message first, so it's in history even if the agent run fails downstream
     user_message = Message(id=uuid.uuid4(), chat_id=chat.id, role="user", content=message, sources=[])
@@ -92,3 +93,9 @@ async def get_chat_messages(db: AsyncSession, workspace_id: uuid.UUID, chat_id: 
         select(Message).where(Message.chat_id == chat_id).order_by(Message.created_at.asc())
     )
     return list(result.scalars().all())
+
+async def get_chat(db: AsyncSession, workspace_id: uuid.UUID, chat_id: uuid.UUID) -> Chat:
+    chat = await db.get(Chat, chat_id)
+    if chat is None or chat.workspace_id != workspace_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Chat not found in this workspace")
+    return chat

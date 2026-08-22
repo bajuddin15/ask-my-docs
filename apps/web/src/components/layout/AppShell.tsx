@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import {
   MessageSquare,
@@ -8,8 +9,11 @@ import {
   ChevronDown,
   Check,
   Plus,
+  Users,
+  CreditCard,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { CreateWorkspaceDialog } from "@/components/CreateWorkspaceDialog";
 import { useAuthStore } from "@/store/authStore";
 import { useWorkspaceStore } from "@/store/workspaceStore";
 import { useWorkspaces } from "@/hooks/useWorkspaces";
@@ -19,14 +23,27 @@ const navItems = [
   { to: "/", label: "Ask", icon: MessageSquare, end: true },
   { to: "/documents", label: "Documents", icon: FileText },
   { to: "/overview", label: "Overview", icon: LayoutGrid },
+  { to: "/members", label: "Members", icon: Users },
 ];
 
 export default function AppShell() {
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const { data: workspaces, activeWorkspace } = useWorkspaces();
   const setActiveWorkspaceId = useWorkspaceStore((s) => s.setActiveWorkspaceId);
+  const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
 
   const initials = user ? `${user.first_name[0]}${user.last_name[0]}` : "..";
+  const usagePct = activeWorkspace
+    ? Math.min(
+        100,
+        Math.round(
+          (activeWorkspace.monthly_query_count /
+            activeWorkspace.monthly_query_limit) *
+            100,
+        ),
+      )
+    : 0;
 
   return (
     <div className="flex min-h-screen">
@@ -38,6 +55,7 @@ export default function AppShell() {
           </span>
         </div>
 
+        {/* Workspace switcher */}
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button className="flex items-center gap-2 bg-surface-2 border border-border-soft rounded-[10px] px-2.5 py-2 mb-4 text-left">
@@ -86,7 +104,10 @@ export default function AppShell() {
                 </DropdownMenu.Item>
               ))}
               <DropdownMenu.Separator className="h-px bg-border-soft my-1.5" />
-              <DropdownMenu.Item className="flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] cursor-pointer outline-none text-accent text-xs font-semibold">
+              <DropdownMenu.Item
+                onSelect={() => setCreateWorkspaceOpen(true)}
+                className="flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] cursor-pointer outline-none text-accent text-xs font-semibold"
+              >
                 <Plus className="h-4 w-4" />
                 Create new workspace
               </DropdownMenu.Item>
@@ -122,6 +143,20 @@ export default function AppShell() {
           Account
         </div>
         <NavLink
+          to="/billings"
+          className={({ isActive }) =>
+            cn(
+              "flex items-center gap-2.5 px-2.5 py-2 rounded-[10px] text-[13.3px] font-medium",
+              isActive
+                ? "bg-accent/10 text-text-1 ring-1 ring-accent/35"
+                : "text-text-2 hover:bg-surface-2",
+            )
+          }
+        >
+          <CreditCard className="h-[17px] w-[17px]" />
+          Billing
+        </NavLink>
+        <NavLink
           to="/settings"
           className={({ isActive }) =>
             cn(
@@ -137,6 +172,25 @@ export default function AppShell() {
         </NavLink>
 
         <div className="flex-1" />
+
+        <button
+          onClick={() => navigate("/billings")}
+          className="bg-surface-2 border border-border-soft rounded-[10px] p-3 mb-3 text-left"
+        >
+          <div className="flex justify-between text-[11.5px] text-text-2 mb-2">
+            <span>Monthly queries</span>
+            <span className="font-mono text-text-1">
+              {activeWorkspace?.monthly_query_count ?? 0} /{" "}
+              {activeWorkspace?.monthly_query_limit ?? 1000}
+            </span>
+          </div>
+          <div className="h-[5px] bg-surface-3 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-accent to-signal"
+              style={{ width: `${usagePct}%` }}
+            />
+          </div>
+        </button>
 
         <div className="flex items-center gap-2.5 p-2 rounded-[10px] border border-border-soft bg-surface-2">
           <Avatar>
@@ -156,6 +210,11 @@ export default function AppShell() {
       <main className="flex-1 min-w-0">
         <Outlet />
       </main>
+
+      <CreateWorkspaceDialog
+        open={createWorkspaceOpen}
+        onOpenChange={setCreateWorkspaceOpen}
+      />
     </div>
   );
 }

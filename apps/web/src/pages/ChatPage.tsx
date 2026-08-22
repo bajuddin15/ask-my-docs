@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Send, Sparkles, Plus, History, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AgentRail, type AgentNode } from "@/components/AgentRail";
-import { useChat, type ChatMessage } from "@/hooks/useChat";
 import { useWorkspaces } from "@/hooks/useWorkspaces";
+import { AgentRunDetailDialog } from "@/components/AgentRunDetailDialog";
+import { SourceCitationDialog } from "@/components/SourceCitationDialog";
+import { useChat, type ChatMessage, type SourceRef } from "@/hooks/useChat";
 
 function traceNodesFor(
   message: ChatMessage | undefined,
@@ -59,17 +61,25 @@ function traceNodesFor(
 }
 
 export default function ChatPage() {
+  const params = useParams();
+  const { chatId } = params as { chatId: string };
   const { activeWorkspace } = useWorkspaces();
   const {
+    chat,
     messages,
     sendMessage,
     isSending,
     startNewChat,
     workspaceReady,
     isLoadingHistory,
-  } = useChat();
+  } = useChat({ chatId });
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  const [citationSource, setCitationSource] = useState<SourceRef | null>(null);
+  const [runDetailMessage, setRunDetailMessage] = useState<ChatMessage | null>(
+    null,
+  );
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -103,7 +113,7 @@ export default function ChatPage() {
           <header className="h-[68px] shrink-0 border-b border-border-soft flex items-center justify-between px-7">
             <div>
               <h1 className="font-display text-lg font-bold text-text-1">
-                {messages.length > 0 ? "Conversation" : "New conversation"}
+                {chat?.title ?? "New conversation"}
               </h1>
               <p className="text-xs text-text-3">
                 Querying {activeWorkspace?.name ?? "your workspace"}
@@ -210,13 +220,32 @@ export default function ChatPage() {
                           </Card>
                         )}
                         {m.sources.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 mt-2">
+                          <div className="flex flex-wrap gap-1.5 mt-2 items-center">
                             {m.sources.map((s) => (
-                              <Badge key={s.chunk_id} variant="accent">
-                                {s.index} {s.filename}
-                                {s.page_number ? ` · p.${s.page_number}` : ""}
-                              </Badge>
+                              <button
+                                key={s.chunk_id}
+                                onClick={() => setCitationSource(s)}
+                              >
+                                <Badge
+                                  variant="accent"
+                                  className="cursor-pointer hover:brightness-125"
+                                >
+                                  {s.index} {s.filename}
+                                  {s.page_number ? ` · p.${s.page_number}` : ""}
+                                </Badge>
+                              </button>
                             ))}
+                            {m.role === "assistant" && (
+                              <button
+                                onClick={() => setRunDetailMessage(m)}
+                                className="text-[10.5px] text-text-3 hover:text-text-1 font-mono ml-1"
+                              >
+                                {m.latency_ms != null
+                                  ? `${(m.latency_ms / 1000).toFixed(1)}s`
+                                  : ""}{" "}
+                                · view run
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>
@@ -315,6 +344,17 @@ export default function ChatPage() {
             )}
         </aside>
       </div>
+
+      <SourceCitationDialog
+        source={citationSource}
+        open={!!citationSource}
+        onOpenChange={(open) => !open && setCitationSource(null)}
+      />
+      <AgentRunDetailDialog
+        message={runDetailMessage}
+        open={!!runDetailMessage}
+        onOpenChange={(open) => !open && setRunDetailMessage(null)}
+      />
     </>
   );
 }

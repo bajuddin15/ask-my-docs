@@ -6,6 +6,8 @@ import OnboardingDocumentsPage from "@/pages/OnboardingDocumentsPage";
 import ChatPage from "@/pages/ChatPage";
 import ChatHistoryPage from "@/pages/ChatHistoryPage";
 import DocumentsPage from "@/pages/DocumentsPage";
+import MembersPage from "@/pages/MembersPage";
+import BillingPage from "@/pages/BillingPage";
 import OverviewPage from "@/pages/OverviewPage";
 import SettingsPage from "@/pages/SettingsPage";
 import AppShell from "@/components/layout/AppShell";
@@ -28,6 +30,8 @@ export default function App() {
           <Route path="/" element={<ChatPage />} />
           <Route path="/chats" element={<ChatHistoryPage />} />
           <Route path="/documents" element={<DocumentsPage />} />
+          <Route path="/members" element={<MembersPage />} />
+          <Route path="/billings" element={<BillingPage />} />
           <Route path="/overview" element={<OverviewPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>

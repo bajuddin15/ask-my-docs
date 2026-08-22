@@ -68,7 +68,7 @@ export default function ChatHistoryPage() {
                 {items.map((chat) => (
                   <Link
                     key={chat.id}
-                    to={`/?chat=${chat.id}`}
+                    to={`/chat/${chat.id}`}
                     className="block rounded-[10px] px-3 py-2.5 hover:bg-surface-2"
                   >
                     <div className="text-[12.8px] font-bold text-text-1 truncate">

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useWorkspaceStore } from "@/store/workspaceStore";
 
@@ -29,35 +29,56 @@ interface ChatResponse {
   message: ChatMessage;
 }
 
-export function useChat() {
+export interface Chat {
+  id: string;
+  workspace_id: string;
+  title: string;
+  created_by: string;
+}
+
+export function useChat({ chatId = "" }: { chatId: string }) {
+  const navigate = useNavigate();
   const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
   const queryClient = useQueryClient();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const urlChatId = searchParams.get("chat");
 
-  const [chatId, setChatId] = useState<string | null>(urlChatId);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+
+  const [chat, setChat] = useState<Chat | null>(null);
 
   // Load history whenever the ?chat= param points at a chat we haven't
   // loaded into local state yet — this is what makes clicking a chat in
   // history actually show its previous messages.
   const historyQuery = useQuery({
-    queryKey: ["chat-messages", urlChatId],
+    queryKey: ["chat-messages", chatId],
     queryFn: async () => {
       const { data } = await api.get<ChatMessage[]>(
-        `/chats/${urlChatId}/messages`,
+        `/chats/${chatId}/messages`,
       );
       return data;
     },
-    enabled: !!urlChatId,
+    enabled: !!chatId,
+  });
+
+  const chatQuery = useQuery({
+    queryKey: ["chat", chatId],
+    queryFn: async () => {
+      const { data } = await api.get<Chat>(`/chats/${chatId}`);
+      return data;
+    },
+    enabled: !!chatId,
   });
 
   useEffect(() => {
-    if (urlChatId && historyQuery.data && chatId !== urlChatId) {
-      setChatId(urlChatId);
+    if (chatId && historyQuery.data) {
       setMessages(historyQuery.data);
     }
-  }, [urlChatId, historyQuery.data, chatId]);
+  }, [chatId, historyQuery.data]);
+
+  useEffect(() => {
+    if (chatId && chatQuery.data) {
+      setChat(chatQuery.data);
+    }
+  }, [chatId, chatQuery.data]);
 
   const mutation = useMutation({
     mutationFn: async (message: string) => {
@@ -75,13 +96,14 @@ export function useChat() {
 
       const { data } = await api.post<ChatResponse>("/chat", {
         message,
-        chat_id: chatId,
+        chat_id: chatId || null,
       });
       return data;
     },
     onSuccess: (data) => {
-      setChatId(data.chat_id);
-      setSearchParams({ chat: data.chat_id }, { replace: true });
+      if (!chatId) {
+        navigate(`/chat/${data.chat_id}`);
+      }
       setMessages((prev) => [...prev, data.message]);
       queryClient.invalidateQueries({ queryKey: ["workspaces"] });
       queryClient.invalidateQueries({ queryKey: ["chats", activeWorkspaceId] });
@@ -89,16 +111,15 @@ export function useChat() {
   });
 
   const startNewChat = () => {
-    setChatId(null);
-    setMessages([]);
-    setSearchParams({}, { replace: true });
+    navigate("/chat");
   };
 
   return {
+    chat,
     messages,
     sendMessage: mutation.mutate,
     isSending: mutation.isPending,
-    isLoadingHistory: !!urlChatId && historyQuery.isLoading,
+    isLoadingHistory: !!chatId && historyQuery.isLoading,
     error: mutation.error,
     startNewChat,
     workspaceReady: !!activeWorkspaceId,

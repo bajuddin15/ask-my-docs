@@ -57,3 +57,18 @@ export function useUploadDocument() {
     },
   });
 }
+
+export function useDeleteDocument() {
+  const queryClient = useQueryClient();
+  const activeWorkspaceId = useWorkspaceStore((s) => s.activeWorkspaceId);
+  return useMutation({
+    mutationFn: async (documentId: string) => {
+      await api.delete(`/documents/${documentId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["documents", activeWorkspaceId],
+      });
+    },
+  });
+}

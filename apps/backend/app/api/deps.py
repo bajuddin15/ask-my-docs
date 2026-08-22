@@ -42,9 +42,6 @@ async def get_current_workspace(
     """
     
     # DEBUG: Print all values
-    print(f"🔍 Current User ID: {current_user.id}")
-    print(f"🔍 X-Workspace-Id: {x_workspace_id}")
-    print(f"🔍 Both IDs type: {type(current_user.id)}, {type(x_workspace_id)}")
     
     result = await db.execute(
         select(WorkspaceMember, Workspace)

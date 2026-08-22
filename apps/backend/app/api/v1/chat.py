@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_current_workspace
@@ -40,6 +40,18 @@ async def get_chat_messages(
         )
         for m in messages
     ]
+    
+@chats_router.get("/{chat_id}", response_model=ChatSummary)
+async def get_chat(
+    chat_id: uuid.UUID,
+    workspace_membership: tuple[Workspace, WorkspaceMember] = Depends(get_current_workspace),
+    db: AsyncSession = Depends(get_db),
+):
+    workspace, _membership = workspace_membership
+    chat = await chat_service.get_chat(db, workspace.id, chat_id)
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat not found")
+    return chat
 
 
 @router.post("", response_model=ChatResponse)
@@ -49,6 +61,8 @@ async def ask(
     workspace_membership: tuple[Workspace, WorkspaceMember] = Depends(get_current_workspace),
     db: AsyncSession = Depends(get_db),
 ):
+    print("payload", payload)
+    
     workspace, _membership = workspace_membership
 
     chat, message = await chat_service.ask(
